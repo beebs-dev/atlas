@@ -4,6 +4,7 @@ export default defineConfig({
   cleanUrls: true,
   srcDir: "content",
   ignoreDeadLinks: true, // REMOVE THIS; ONLY FOR DEMO
+  base: "/knowledge-base",
 
   title: "Knowledge Base",
   titleTemplate: "knowledge wiki",
