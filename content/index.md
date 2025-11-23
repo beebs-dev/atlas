@@ -2,7 +2,7 @@
 layout: home
 hero:
   name: "Knowledge Base"
-  text: "sylvan franklin community knowledge base"
+  text: "of Beebles Laboratium"
   tagline:
   actions:
     - theme: brand
@@ -10,5 +10,5 @@ hero:
       link: /wiki
     - theme: alt
       text: Contribute
-      link: https://github.com/0x15BA88FF/knowledge-base/edit/main/CONTRIBUTION.md
+      link: https://github.com/beebs.dev/knowledge-base/edit/main/CONTRIBUTION.md
 ---
