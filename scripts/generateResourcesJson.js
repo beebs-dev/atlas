@@ -9,6 +9,7 @@ const ogs = require("open-graph-scraper");
 const ROOT = path.resolve(__dirname, "..");
 const CONTENT_DIR = path.join(ROOT, "content");
 const OUTPUT_PATH = path.join(ROOT, ".vitepress", "resources.json");
+const VOTES_PATH = path.join(ROOT, "data", "votes.json");
 
 async function generateResourcesJson() {
   const files = await fg(["**/*.md"], {
@@ -18,6 +19,7 @@ async function generateResourcesJson() {
   });
 
   const entries = [];
+  const voteStats = await loadVoteStats();
 
   for (const file of files) {
     const basename = path.basename(file);
@@ -31,6 +33,7 @@ async function generateResourcesJson() {
     const title = parsed.data.title || slug;
 
     const { thumb, favicon } = await resolveThumb(parsed.data.link);
+    const stats = voteStats.get(parsed.data.discord_thread_id) || { weekly: 0, monthly: 0, all: 0 };
 
     entries.push({
       title,
@@ -41,9 +44,9 @@ async function generateResourcesJson() {
       link: parsed.data.link || null,
       thumb,
       favicon,
-      votes_weekly: parsed.data.votes_weekly ?? 0,
-      votes_monthly: parsed.data.votes_monthly ?? 0,
-      votes_all_time: parsed.data.votes_all_time ?? 0,
+      votes_weekly: parsed.data.votes_weekly ?? stats.weekly,
+      votes_monthly: parsed.data.votes_monthly ?? stats.monthly,
+      votes_all_time: parsed.data.votes_all_time ?? stats.all,
       discord_thread_id: parsed.data.discord_thread_id || null
     });
   }
@@ -76,6 +79,31 @@ async function resolveThumb(link) {
     return { thumb: ogUrl, favicon };
   } catch (error) {
     return { thumb: null, favicon };
+  }
+}
+
+async function loadVoteStats() {
+  try {
+    const raw = await fs.readFile(VOTES_PATH, "utf8");
+    const data = JSON.parse(raw);
+    const now = Math.floor(Date.now() / 1000);
+    const weekAgo = now - 7 * 24 * 60 * 60;
+    const monthAgo = now - 30 * 24 * 60 * 60;
+
+    const stats = new Map();
+    for (const [threadId, entry] of Object.entries(data)) {
+      const votes = entry.votes || [];
+      const weekly = votes.filter((v) => v.timestamp >= weekAgo).length;
+      const monthly = votes.filter((v) => v.timestamp >= monthAgo).length;
+      stats.set(threadId, {
+        weekly,
+        monthly,
+        all: votes.length,
+      });
+    }
+    return stats;
+  } catch (error) {
+    return new Map();
   }
 }
 
